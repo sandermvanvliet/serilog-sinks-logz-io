@@ -80,9 +80,6 @@ namespace Serilog.Sinks.Logz.Io.Tests
             log.Dispose();
 
             //Assert
-            httpData.Should().NotBeNullOrEmpty();
-            httpData.Should().HaveCount(1);
-
             var data = await httpData.Single().ReadAsStringAsync();
             data.Should().NotBeNullOrWhiteSpace();
 
@@ -140,9 +137,6 @@ namespace Serilog.Sinks.Logz.Io.Tests
             log.Dispose();
 
             //Assert
-            httpData.Should().NotBeNullOrEmpty();
-            httpData.Should().HaveCount(1);
-
             var data = await httpData.Single().ReadAsStringAsync();
             data.Should().NotBeNullOrWhiteSpace();
             var dataDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(data);
@@ -168,9 +162,6 @@ namespace Serilog.Sinks.Logz.Io.Tests
             log.Dispose();
 
             //Assert
-            httpData.Should().NotBeNullOrEmpty();
-            httpData.Should().HaveCount(1);
-
             var data = await httpData.Single().ReadAsStringAsync();
             data.Should().NotBeNullOrWhiteSpace();
             var dataDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(data);
@@ -195,9 +186,6 @@ namespace Serilog.Sinks.Logz.Io.Tests
             log.Dispose();
 
             //Assert
-            httpData.Should().NotBeNullOrEmpty();
-            httpData.Should().HaveCount(1);
-
             var data = await httpData.Single().ReadAsStringAsync();
             data.Should().NotBeNullOrWhiteSpace();
             var dataDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(data);
@@ -222,9 +210,6 @@ namespace Serilog.Sinks.Logz.Io.Tests
             log.Dispose();
 
             //Assert
-            httpData.Should().NotBeNullOrEmpty();
-            httpData.Should().HaveCount(1);
-
             var data = await httpData.Single().ReadAsStringAsync();
             data.Should().NotBeNullOrWhiteSpace();
             var dataDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(data);
