@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Serilog.Sinks.Logz.Io.Demo": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "LOGZIO_TOKEN": "khiGkDHPyEQIpOBzjHeTXNOheQriLMeQ"
+      }
+    }
+  }
+}

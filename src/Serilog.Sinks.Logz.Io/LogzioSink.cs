@@ -134,26 +134,36 @@ namespace Serilog.Sinks.Logz.Io
 
         private string FormatLogEvent(LogEvent loggingEvent)
         {
+            var renderedMessage = "";
+
+            var writer = new System.IO.StringWriter();
+            loggingEvent.RenderMessage(writer);
+
+            renderedMessage = writer.GetStringBuilder().ToString();
+
             var values = new Dictionary<string, object>
             {
+                // level and message are supplied as lower case properties 
+                // because of defaults in logz.io
                 {"@timestamp", loggingEvent.Timestamp.ToString("O")},
                 {"level", loggingEvent.Level.ToString()},
-                {"message", loggingEvent.RenderMessage()},
-                {"exception", loggingEvent.Exception}
+                {"message", loggingEvent.MessageTemplate.Text},
+                {"RenderedMessage", renderedMessage},
+                {"Exception", loggingEvent.Exception}
             };
 
             if (loggingEvent.Properties != null)
             {
                 if (loggingEvent.Properties.TryGetValue("SourceContext", out var sourceContext))
                 {
-                    values["logger"] = sourceContext.ToString();
+                    values["SourceContext"] = sourceContext.ToString();
                 }
                 if (loggingEvent.Properties.TryGetValue("ThreadId", out var threadId))
                 {
-                    values["thread"] = GetPropertyInternalValue(threadId);
+                    values["ThreadId"] = GetPropertyInternalValue(threadId);
                 }
 
-                var propertyPrefix = _boostProperties ? "" : "properties.";
+                var propertyPrefix = _boostProperties ? "" : "Properties.";
 
                 foreach (var property in loggingEvent.Properties)
                 {
@@ -184,6 +194,14 @@ namespace Serilog.Sinks.Logz.Io
             }
 
             return value;
+        }
+    }
+
+    public class FooProvider : IFormatProvider
+    {
+        public object GetFormat(Type formatType)
+        {
+            return null;
         }
     }
 }

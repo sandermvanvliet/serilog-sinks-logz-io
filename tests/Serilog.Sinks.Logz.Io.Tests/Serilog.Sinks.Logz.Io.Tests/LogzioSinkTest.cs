@@ -95,30 +95,30 @@ namespace Serilog.Sinks.Logz.Io.Tests
             dataDic["message"].Should().Be(logMsg);
             dataDic["level"].Should().Be(LogEventLevel.Warning.ToString());
 
-            dataDic.Should().ContainKeys("properties.PropStr1", "properties.PropInt1", "properties.PropInt2",
-                "properties.PropBool1", "properties.PropArr1", "properties.PropArr2",
-                "properties.PropObj1", "properties.PropObj2", "properties.PropNull1",
-                "properties.PropDic1", "properties.PropFloat1", "properties.PropFloat2",
-                "properties.PropArr3", "properties.PropEnum1", "properties.PropEnum2");
+            dataDic.Should().ContainKeys("Properties.PropStr1", "Properties.PropInt1", "Properties.PropInt2",
+                "Properties.PropBool1", "Properties.PropArr1", "Properties.PropArr2",
+                "Properties.PropObj1", "Properties.PropObj2", "Properties.PropNull1",
+                "Properties.PropDic1", "Properties.PropFloat1", "Properties.PropFloat2",
+                "Properties.PropArr3", "Properties.PropEnum1", "Properties.PropEnum2");
 
-            dataDic["properties.PropStr1"].Should().Be("banana");
-            dataDic["properties.PropInt1"].Should().Be(42);
-            dataDic["properties.PropInt2"].Should().Be(-42);
-            dataDic["properties.PropFloat1"].Should().Be(88.8);
-            dataDic["properties.PropFloat2"].Should().Be(-43.5);
-            dataDic["properties.PropBool1"].Should().Be(false);
-            dataDic["properties.PropBool2"].Should().Be(true);
-            dataDic["properties.PropNull1"].Should().BeNull();
-            dataDic["properties.PropEnum1"].Should().Be(DateTimeKind.Utc.ToString());
-            dataDic["properties.PropEnum2"].Should().Be(StringComparison.CurrentCultureIgnoreCase.ToString());
+            dataDic["Properties.PropStr1"].Should().Be("banana");
+            dataDic["Properties.PropInt1"].Should().Be(42);
+            dataDic["Properties.PropInt2"].Should().Be(-42);
+            dataDic["Properties.PropFloat1"].Should().Be(88.8);
+            dataDic["Properties.PropFloat2"].Should().Be(-43.5);
+            dataDic["Properties.PropBool1"].Should().Be(false);
+            dataDic["Properties.PropBool2"].Should().Be(true);
+            dataDic["Properties.PropNull1"].Should().BeNull();
+            dataDic["Properties.PropEnum1"].Should().Be(DateTimeKind.Utc.ToString());
+            dataDic["Properties.PropEnum2"].Should().Be(StringComparison.CurrentCultureIgnoreCase.ToString());
 
             var dataDinamic = JObject.Parse(data);
-            dataDinamic["properties.PropStr1"].Should().BeNullOrEmpty();
-            dataDinamic["properties.PropArr1"].Should().BeOfType<JArray>();
-            dataDinamic["properties.PropArr2"].Should().BeOfType<JArray>();
-            dataDinamic["properties.PropArr3"].Should().BeOfType<JArray>();
-            dataDinamic["properties.PropDic1"].Should().BeOfType<JObject>();
-            dataDinamic["properties.PropObj2"].Should().BeOfType<JObject>();
+            dataDinamic["Properties.PropStr1"].Should().BeNullOrEmpty();
+            dataDinamic["Properties.PropArr1"].Should().BeOfType<JArray>();
+            dataDinamic["Properties.PropArr2"].Should().BeOfType<JArray>();
+            dataDinamic["Properties.PropArr3"].Should().BeOfType<JArray>();
+            dataDinamic["Properties.PropDic1"].Should().BeOfType<JObject>();
+            dataDinamic["Properties.PropObj2"].Should().BeOfType<JObject>();
 
             //TODO More Test for other Props
         }
@@ -147,12 +147,12 @@ namespace Serilog.Sinks.Logz.Io.Tests
             data.Should().NotBeNullOrWhiteSpace();
             var dataDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(data);
 
-            dataDic["properties.EnrichedProperty"].Should().Be("banana");
-            dataDic["properties.MessageTemplateProperty"].Should().Be("pear");
+            dataDic["Properties.EnrichedProperty"].Should().Be("banana");
+            dataDic["Properties.MessageTemplateProperty"].Should().Be("pear");
         }
 
         [Fact]
-        public async Task GivenBoostPropertiesIsEnabled_PropertiesDoNotHavePropertiesPrefix()
+        public async Task GivenBoostPropertiesIsEnabled_EnrichedPropertyDoesNotHavePropertiesPrefix()
         {
             //Arrange
             var httpData = new List<HttpContent>();
@@ -176,7 +176,87 @@ namespace Serilog.Sinks.Logz.Io.Tests
             var dataDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(data);
 
             dataDic["EnrichedProperty"].Should().Be("banana");
+        }
+
+        [Fact]
+        public async Task GivenBoostPropertiesIsEnabled_MessagePropertyDoesNotHavePropertiesPrefix()
+        {
+            //Arrange
+            var httpData = new List<HttpContent>();
+            var log = new LoggerConfiguration()
+                .WriteTo.Sink(new LogzioSink(new GoodFakeHttpClient(httpData), "testAuthCode", "testTyoe", 100,
+                    TimeSpan.FromSeconds(1), boostProperties: true))
+                .Enrich.WithProperty("EnrichedProperty", "banana")
+                .CreateLogger();
+
+            //Act
+            var logMsg = "This a Information Log Trace {MessageTemplateProperty}";
+            log.Information(logMsg, "pear");
+            log.Dispose();
+
+            //Assert
+            httpData.Should().NotBeNullOrEmpty();
+            httpData.Should().HaveCount(1);
+
+            var data = await httpData.Single().ReadAsStringAsync();
+            data.Should().NotBeNullOrWhiteSpace();
+            var dataDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(data);
+            
             dataDic["MessageTemplateProperty"].Should().Be("pear");
+        }
+
+        [Fact]
+        public async Task GivenMessageWithProperties_DataContainsMessageTemplateProperty()
+        {
+            //Arrange
+            var httpData = new List<HttpContent>();
+            var log = new LoggerConfiguration()
+                .WriteTo.Sink(new LogzioSink(new GoodFakeHttpClient(httpData), "testAuthCode", "testTyoe", 100,
+                    TimeSpan.FromSeconds(1), boostProperties: true))
+                .Enrich.WithProperty("EnrichedProperty", "banana")
+                .CreateLogger();
+
+            //Act
+            var logMsg = "This a Information Log Trace {MessageTemplateProperty}";
+            log.Information(logMsg, "pear");
+            log.Dispose();
+
+            //Assert
+            httpData.Should().NotBeNullOrEmpty();
+            httpData.Should().HaveCount(1);
+
+            var data = await httpData.Single().ReadAsStringAsync();
+            data.Should().NotBeNullOrWhiteSpace();
+            var dataDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(data);
+
+            dataDic["message"].Should().Be(logMsg);
+        }
+
+        [Fact]
+        public async Task GivenMessageWithProperties_DataContainsRenderedMessageTemplateProperty()
+        {
+            //Arrange
+            var httpData = new List<HttpContent>();
+            var log = new LoggerConfiguration()
+                .WriteTo.Sink(new LogzioSink(new GoodFakeHttpClient(httpData), "testAuthCode", "testTyoe", 100,
+                    TimeSpan.FromSeconds(1), boostProperties: true))
+                .Enrich.WithProperty("EnrichedProperty", "banana")
+                .CreateLogger();
+
+            //Act
+            var logMsg = "This a Information Log Trace {MessageTemplateProperty}";
+            log.Information(logMsg, "pear");
+            log.Dispose();
+
+            //Assert
+            httpData.Should().NotBeNullOrEmpty();
+            httpData.Should().HaveCount(1);
+
+            var data = await httpData.Single().ReadAsStringAsync();
+            data.Should().NotBeNullOrWhiteSpace();
+            var dataDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(data);
+
+            dataDic["RenderedMessage"].Should().Be("This a Information Log Trace \"pear\"");
         }
     }
 }
