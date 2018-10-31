@@ -258,5 +258,35 @@ namespace Serilog.Sinks.Logz.Io.Tests
 
             dataDic["RenderedMessage"].Should().Be("This a Information Log Trace \"pear\"");
         }
+
+        [Fact]
+        public async Task GivenMessageWithException_DataContainsExceptionProperty()
+        {
+            //Arrange
+            var httpData = new List<HttpContent>();
+            var log = new LoggerConfiguration()
+                .WriteTo.Sink(new LogzioSink(new GoodFakeHttpClient(httpData), "testAuthCode", "testTyoe", 100,
+                    TimeSpan.FromSeconds(1), boostProperties: true))
+                .Enrich.WithProperty("EnrichedProperty", "banana")
+                .CreateLogger();
+
+            //Act
+            var logMsg = "This a Information Log Trace {MessageTemplateProperty}";
+            log.Information(new Exception("BANG!"), logMsg, "pear");
+            log.Dispose();
+
+            //Assert
+            var data = await httpData.Single().ReadAsStringAsync();
+            data.Should().NotBeNullOrWhiteSpace();
+            var dataDic = JsonConvert.DeserializeObject<Dictionary<string, object>>(data);
+
+            dataDic.Should().ContainKey("Exception");
+            ((JObject) dataDic["Exception"])
+                .Should()
+                .ContainKey("Message")
+                .WhichValue.Value<string>()
+                .Should()
+                .Be("BANG!");
+        }
     }
 }
